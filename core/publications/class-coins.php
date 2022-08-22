@@ -1,9 +1,13 @@
 <?php
+
 /**
  * This file contains logic to export in Coins format.
  *
+ * Adapted from the work of Alec Smecher at
+ * https://github.com/pkp/coins/blob/main/CoinsPlugin.inc.php
+ *
  * @license http://www.gnu.org/licenses/gpl-2.0.html GPLv2 or later
- * @since 2.0.0
+ * @since 9.0.0
  */
 
 /**
@@ -13,7 +17,7 @@
  * @since 9.0.0
  */
 class TP_Coins {
-
+    
     
 
 }
