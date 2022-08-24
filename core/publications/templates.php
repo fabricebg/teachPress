@@ -483,7 +483,8 @@ class TP_HTML_Publication_Template {
         
         require_once("class-coins.php");
         
-        $s .= TP_Coins::get_single_publication_coins($row);
+        $s .= TP_Coins::get_single_publication_coins3($row);
+        
         return $s;
     }
     
