@@ -68,7 +68,8 @@ class TP_Coins {
                    $cur_type == "inbook" ||
                    $cur_type == "incollection" ||
                    $cur_type == "inproceedings" ||
-                   $cur_type == "techreport") {
+                   $cur_type == "techreport" ||
+                   $cur_type == "proceedings") { // TP: add this type
 
             $tag_map->add("rft_val_fmt", "info:ofi/fmt:kev:mtx:book", true, null);
             
@@ -87,6 +88,9 @@ class TP_Coins {
                 $tag_map->add("rft.genre", "report", true, null);
                 $tag_map->add("rft.series", "series", false, null);
                 $tag_map->add("rft.btitle", "title", false, null);
+            } else if ($cur_type == "proceedings") {
+                $tag_map->add("rft.genre", "proceedings", true, null);
+                $tag_map->add("rft.title", "title", false, null);
             }
             
             $tag_map->add("rft.place", "address", false, null);
@@ -182,9 +186,11 @@ class TP_Coins {
         
         // pages
         if (array_key_exists("pages", $row) && strlen(trim($row["pages"])) > 0) {
-            $parts = preg_split("/[-–—]/", PREG_SPLIT_NO_EMPTY);
+            $parts = preg_split("/[-–—]/", trim($row["pages"]));
+            $parts = array_filter($parts, function($item) { return strlen($item) > 0; });
+            $parts = array_values($parts); // restart numbering from 0
             if (count($parts) == 1) {
-                $tag_map->add("rft.pages", $parts[0], true, null);
+                $tag_map->add("rft.tpages", $parts[0], true, null); // total nb of pages
             } else if (count($parts) >= 2) {
                 $tag_map->add("rft.pages", $parts[0] . "–" . $parts[1], true, null);
                 $tag_map->add("rft.spage", $parts[0], true, null);
@@ -248,7 +254,7 @@ class TP_Coins_Tags {
      *
      */
     function add($key, $value, $is_constant, $pattern) {
-        $this->tag_map[$key] = array($value, $is_constant, $pattern);
+        $this->tag_map[] = array($key, $value, $is_constant, $pattern);
     }
 
     /**
@@ -280,10 +286,11 @@ class TP_Coins_Tags {
     function to_coins($row) {
         $fragments = array();
         
-        foreach ($this->tag_map as $key => $tag_info) {
-            $value = $tag_info[0];
-            $is_constant = $tag_info[1];
-            $pattern = $tag_info[2];
+        foreach ($this->tag_map as $tag_info) {
+            $key = $tag_info[0];
+            $value = $tag_info[1];
+            $is_constant = $tag_info[2];
+            $pattern = $tag_info[3];
             
             if ($is_constant) {
                 $fragments[] = sprintf("%s=%s", $key, urlencode($value));
@@ -293,15 +300,17 @@ class TP_Coins_Tags {
                     
                     $value = trim($row[$value]);
                     
-                    if (preg_match("/\d\d\d\d-01-01/", $value)) { // imperfect, but good heuristic
-                        $value = substr($value, 0, 4); // keep only the year
+                    if (strlen($value) > 0) {
+                        if (preg_match("/\d\d\d\d-01-01/", $value)) { // imperfect, but good heuristic
+                            $value = substr($value, 0, 4); // keep only the year
+                        }
+                        
+                        if ($pattern !== null) {
+                            $value = sprintf($pattern, $value);
+                        }
+                        
+                        $fragments[] = sprintf("%s=%s", $key, urlencode($value));
                     }
-                    
-                    if ($pattern !== null) {
-                        $value = sprintf($pattern, $value);
-                    }
-                    
-                    $fragments[] = sprintf("%s=%s", $key, urlencode($value));
                 } // otherwise, mute value
             }
         }
