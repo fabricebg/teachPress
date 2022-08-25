@@ -48,6 +48,13 @@ class TP_Coins {
         // encode genre and item-specific data
         $cur_type = trim(strtolower($row['type']));
         
+        // TP: some teachPress types are not handled by coins and Zotero. These
+        // are necessarily imperfect mappings
+        if ($cur_type == "workshop") {
+            $cur_type = "book";
+        }
+        
+        // master switch
         if ($cur_type == 'article') {
             
             $tag_map->add("rft_val_fmt", "info:ofi/fmt:kev:mtx:journal", true, null);
@@ -132,7 +139,7 @@ class TP_Coins {
             $tag_map->add("rft.title", "title", false, null);
             $tag_map->add("rft.source", "journal", false, null);
             $tag_map->add("rft.publisher", "publisher", false, null);
-            $tag_map->add("rft.description", "abstract", false, null);
+            // $tag_map->add("rft.description", "abstract", false, null); // TP: moved outside
             
             if (array_key_exists("doi", $row)) {
                 $tag_map->add("rft.identifier", "doi", false, "urn:doi:%s");
@@ -141,6 +148,9 @@ class TP_Coins {
             }
             
         }
+
+        // TP: better position for abstract
+        $tag_map->add("rft.description", "abstract", false, null);
         
         // authors and creators
         $authors = array();
