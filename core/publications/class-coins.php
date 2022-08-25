@@ -125,9 +125,9 @@ class TP_Coins {
             // we map as much as possible to DC for all other types. This will export some info
             // and work very nicely on roundtrip. All of these fields legal for mtx:dc according to
             // http://alcme.oclc.org/openurl/servlet/OAIHandler/extension?verb=GetMetadata&metadataPrefix=mtx&identifier=info:ofi/fmt:kev:mtx:dc
-            $tag_map->add("rft_val_fmt", "info:ofi/fmt:kev:mtx:patent", true, null);
+            $tag_map->add("rft_val_fmt", "info:ofi/fmt:kev:mtx:dc", true, null);
             
-            // lacking something better we use Zotero item types here; no clear alternative and this works for roundtrip            
+            // lacking something better we use Zotero item types here; no clear alternative and this works for roundtrip
             $tag_map->add("rft.type", $cur_type, true, null);
             $tag_map->add("rft.title", "title", false, null);
             $tag_map->add("rft.source", "journal", false, null);
