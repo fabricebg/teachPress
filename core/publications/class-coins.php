@@ -11,57 +11,22 @@
  */
 
 /**
- * teachPress Coins class
+ * teachPress Coins class, used ot produce OpenURL ContextObject from items.
  *
- * @package teachpress\core\bibtex
  * @since 9.0.0
  */
 class TP_Coins {
     
     /**
-     * Gets a single publication in coins format
-     * Adapted from Zotero's OpenURL library
+     * Produces a single publication in coins format, i.e.
+     * Generates an OpenURL ContextObject from an item, version 1.0.
+     *
+     * Adapted from Zotero's OpenURL library:
      * https://github.com/zotero/utilities/blob/master/openurl.js
      * @param array $row    A row in raw format directly from the database
      * @return string   An HTML span microtagged with Coins info.
      * @since 9.0.0
     */
-    public static function get_single_publication_coins2($item, $version="1.0") {
-        $my_entries = array();
-
-        $_mapTag = function($data, $tag, $dontAddPrefix, &$entries) {
-            global $version;
-            if($version === "1.0" && !$dontAddPrefix) $tag = "rft.".$tag;
-            
-            $entries[] = $tag."=".urlencode($data);
-        };
-        
-        if($version == "1.0") {
-            $_mapTag("Z39.88-2004", "url_ver", true, $my_entries);
-            $_mapTag("Z39.88-2004", "ctx_ver", true, $my_entries);
-            $_mapTag("info:sid/zotero.org:2", "rfr_id", true, $my_entries);
-            if(array_key_exists("doi", $item)) $_mapTag("info:doi/".$item['doi'], "rft_id", true, $my_entries);
-//            if(item.ISBN) _mapTag("urn:isbn:"+item.ISBN, "rft_id", true);
-//            if(pmid) _mapTag("info:pmid/"+pmid, "rft_id", true);
-        }
-        
-        if($item['type'] == "article") {
-            if($version === "1.0") {
-                $_mapTag("info:ofi/fmt:kev:mtx:journal", "rft_val_fmt", true, $my_entries);
-            }
-            $_mapTag("article", "genre", false, $my_entries);
-            
-            $_mapTag($item["title"], "atitle", false, $my_entries);
-            $_mapTag($item["journal"], ($version == "0.1" ? "title" : "jtitle"), false, $my_entries);
-            //$_mapTag(item.journalAbbreviation, "stitle");
-            $_mapTag($item["volume"], "volume", false, $my_entries);
-            $_mapTag($item["issue"], "issue", false, $my_entries);
-            
-        }
-
-        return sprintf('<span class="Z3988" title="%s"></span>', implode("&", $my_entries));
-    }
-    
     public static function get_single_publication_coins($row) {
         global $wp;
         
@@ -227,9 +192,11 @@ class TP_Coins {
     }
 
     /**
-     * Drouin, P. and Francoeur, Annie and Madonna
-     * array(array("P.", "Drouin"), array("Annie", "Francoeur"), array("Madonna"))
-     *
+     * Parses authors in the database format and returns data structure.
+     * @param string $names    Names from the DB, e.g. Drouin, P. and Francoeur, Annie and Madonna.
+     * @return array   An array of names, separated in first and last names, e.g.
+     *                 array(array("P.", "Drouin"), array("Annie", "Francoeur"), array("Madonna"))
+     * @since 9.0.0
      */
     static function parse_human_names($names) {
         $names = trim($names);
@@ -245,16 +212,41 @@ class TP_Coins {
     
 }
 
+/**
+ * teachPress TP_Coins_Tags, used as a helper to manage the tags produced
+ * in Coins format.
+ *
+ * @since 9.0.0
+ */
 class TP_Coins_Tags {
     
     function __construct() {
         $this->tag_map = array();
     }
     
+    /**
+     * Adds a key, value pair in the Coins tags.
+     * @param string $key    The key name in Coins, usually prefixed with rft.
+     * @param string $value  The key value. Can be either a constant, like a format name, e.g.
+     *                       add("rft_val_fmt", "info:ofi/fmt:kev:mtx:dissertation"
+     *                       or a key in the item, e.g. $row[value] that is going to be looked up
+     *                       when function to_coins is called.
+     * @param bool $is_constant True iff $value is a constant.
+     * @param string $pattern Will be used to format the value with sprintf iff not null.
+     *
+     */
     function add($key, $value, $is_constant, $pattern) {
         $this->tag_map[$key] = array($value, $is_constant, $pattern);
     }
 
+    /**
+     * Adds a creator to an item.
+     * @param string $key_prefix    The key name in Coins, usually prefixed with rft. The strings
+     *                              "first" and "last" are appended.
+     * @param mixed $creator  A creator person, in format array(last_name, first_name) or array(name)
+     *                        for mononyms. If a string, will be used as such, e.g. "John Smith".
+     *
+     */
     function add_human_creator($key_prefix, $creator) {
         if (gettype($creator) == "array") {
             if (count($creator) >= 2) { // larger than 2 should not happen
@@ -268,6 +260,11 @@ class TP_Coins_Tags {
         }
     }
     
+    /**
+     * Creates the span microtagged for a given item.
+     * @param $row The item.
+     * @return The HTML span, ready to be used.
+     */
     function to_coins($row) {
         $fragments = array();
         
