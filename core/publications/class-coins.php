@@ -48,9 +48,9 @@ class TP_Coins {
         // encode genre and item-specific data
         $cur_type = trim(strtolower($row['type']));
         
-        // TP: some teachPress types are not handled by coins and Zotero. These
-        // are necessarily imperfect mappings
-        if ($cur_type == "workshop") {
+        // TP: some teachPress types are not handled by coins and Zotero. The following
+        // are necessarily imperfect mappings.
+        if ($cur_type == "workshop" || $cur_type == "booklet") {
             $cur_type = "book";
         }
         
@@ -135,7 +135,7 @@ class TP_Coins {
             $tag_map->add("rft.title", "title", false, null);
             $tag_map->add("rft.assignee", "assignee", false, null); // unsupported
             $tag_map->add("rft.number", "issue", false, null);
-            // $tag_map->add("rft.date", "date", false, null); // redundant
+            // $tag_map->add("rft.date", "date", false, null); // redundant with info below
             
         } else {
             // we map as much as possible to DC for all other types. This will export some info
@@ -153,14 +153,14 @@ class TP_Coins {
             // TP: moved doi and url identifiers outside of the if
         }
         
-        // TP: better position for doi
+        // TP: better position for doi and url, common to most types above
         if (array_key_exists("doi", $row) === true && strlen($row["doi"]) > 4) {
             $tag_map->add("rft.identifier", "doi", false, "urn:doi:%s");
         } else {
             $tag_map->add("rft.identifier", "url", false, null);
         }
 
-        // TP: better position for abstract
+        // TP: better position for abstract even if not supported for some types (e.g., patent)
         $tag_map->add("rft.description", "abstract", false, null);
         
         // authors and creators
