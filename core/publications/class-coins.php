@@ -92,7 +92,12 @@ class TP_Coins {
                 $tag_map->add("rft.genre", "proceedings", true, null);
                 $tag_map->add("rft.title", "title", false, null);
             }
-            
+
+            $tag_map->add("rft.volume", "volume", false, null); // TP
+            $tag_map->add("rft.number", "issue", false, null); // TP
+            $tag_map->add("rft.edition", "edition", false, null); // TP
+            $tag_map->add("rft.issue", "issue", false, null); // TP
+
             $tag_map->add("rft.place", "address", false, null);
             $tag_map->add("rft.publisher", "publisher", false, null);
             $tag_map->add("rft.editor", "editor", false, null);
@@ -172,7 +177,7 @@ class TP_Coins {
 
             // encode subsequent creators as au
             for ($i = 1; $i < count($authors); $i += 1) {
-                $author_name = implode(' ', array_reverse($authors[$i]));
+                $author_name = implode(' ', $authors[$i]);
                 if ($cur_type == "patent") {
                     $tag_map->add_human_creator("rft.inventor", $author_name);
                 } else {
@@ -210,10 +215,13 @@ class TP_Coins {
     }
 
     /**
-     * Parses authors in the database format and returns data structure.
-     * @param string $names    Names from the DB, e.g. Drouin, P. and Francoeur, Annie and Madonna.
+     * Parses authors in the database format and returns data structure. This compensates for the fact
+     * that some authors may be specified either as lastname, firstname or firstname lastname.
+     * @param string $names    Names from the DB, e.g. Drouin, P. and
+                               Francoeur, Annie and Madonna and John K. Smith.
      * @return array   An array of names, separated in first and last names, e.g.
-     *                 array(array("P.", "Drouin"), array("Annie", "Francoeur"), array("Madonna"))
+     *                 array(array("P.", "Drouin"), array("Annie", "Francoeur"), array("Madonna"),
+     *                 array("John", "K. Smith"))
      * @since 9.0.0
      */
     static function parse_human_names($names) {
@@ -222,9 +230,23 @@ class TP_Coins {
         foreach(explode(" and ", $names) as $author) {
             if (gettype($author) == "string") {
                 $parts = explode(", ", $author);
-                $result[] = $parts;
+                if (count($parts) == 1) {
+                    $author = trim($parts[0]);
+                    $first_space_index = strpos($author, " ");
+                    
+                    if ($first_space_index === false) { // no space, hence mononym like Cher
+                        $result[] = array($author);
+                    } else { // space, will split there
+                        $result[] = array(substr($author, 0, $first_space_index),
+                                          trim(substr($author, $first_space_index)));
+                    }
+                } else {
+                    $result[] = array_merge(array($parts[count($parts) - 1]),
+                                            array_slice($parts, 0, count($parts) - 1));
+                }
             }
         }
+        
         return $result;
     }
     
@@ -261,7 +283,7 @@ class TP_Coins_Tags {
      * Adds a creator to an item.
      * @param string $key_prefix    The key name in Coins, usually prefixed with rft. The strings
      *                              "first" and "last" are appended.
-     * @param mixed $creator  A creator person, in format array(last_name, first_name) or array(name)
+     * @param mixed $creator  A creator person, in format array(firstname, lastname) or array(name)
      *                        for mononyms. If a string, will be used as such, e.g. "John Smith".
      *
      */
