@@ -150,12 +150,14 @@ class TP_Coins {
             $tag_map->add("rft.publisher", "publisher", false, null);
             // $tag_map->add("rft.description", "abstract", false, null); // TP: moved outside
             
-            if (array_key_exists("doi", $row)) {
-                $tag_map->add("rft.identifier", "doi", false, "urn:doi:%s");
-            } else {
-                $tag_map->add("rft.identifier", "url", false);
-            }
-            
+            // TP: moved doi and url identifiers outside of the if
+        }
+        
+        // TP: better position for doi
+        if (array_key_exists("doi", $row) === true && strlen($row["doi"]) > 4) {
+            $tag_map->add("rft.identifier", "doi", false, "urn:doi:%s");
+        } else {
+            $tag_map->add("rft.identifier", "url", false, null);
         }
 
         // TP: better position for abstract
@@ -163,7 +165,7 @@ class TP_Coins {
         
         // authors and creators
         $authors = array();
-        if (array_key_exists("author", $row)) {
+        if (array_key_exists("author", $row) && strlen($row["author"]) > 2) {
             $authors = TP_Coins::parse_human_names($row["author"]);
         }
         

@@ -501,8 +501,8 @@ class TP_HTML_Publication_Template {
         // load entry template
         $s = $template->get_entry($interface);
         
+        // TODO: should be moved in template
         require_once("class-coins.php");
-        
         $s .= TP_Coins::get_single_publication_coins($row);
         
         return $s;
