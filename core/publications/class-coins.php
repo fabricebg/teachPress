@@ -290,8 +290,8 @@ class TP_Coins_Tags {
     function add_human_creator($key_prefix, $creator) {
         if (gettype($creator) == "array") {
             if (count($creator) >= 2) { // larger than 2 should not happen
-                $this->add($key_prefix . "first", $creator[1], true, null);
-                $this->add($key_prefix . "last", $creator[0], true, null);
+                $this->add($key_prefix . "first", $creator[0], true, null);
+                $this->add($key_prefix . "last", $creator[1], true, null);
             } else if (count($creator) == 1) {
                 $this->add($key_prefix . "last", $creator[0], true, null);
             }
