@@ -50,9 +50,9 @@ class TP_Coins {
         
         // TP: some teachPress types are not handled by coins and Zotero. The following
         // are necessarily imperfect mappings.
-        if ($cur_type == "workshop" || $cur_type == "booklet" || $cur_type == "conference") {
+        if ($cur_type == "workshop" || $cur_type == "booklet" || $cur_type == "conference" || $cur_type == "manual") {
             $cur_type = "book";
-        } else if ($cur_type == "misc" || $cur_type == "workingpaper") {
+        } else if ($cur_type == "misc" || $cur_type == "workingpaper" || $cur_type == "media") {
             $cur_type = "document";
         } else if ($cur_type == "online") {
             $cur_type = "webpage";
@@ -132,6 +132,7 @@ class TP_Coins {
             $tag_map->add("rft.title", "title", false, null);
             $tag_map->add("rft.inst", "editor", false, null);
             $tag_map->add("rft.degree", $degree, false, null);
+            $tag_map->add("rft.place", "address", false, null); // TP: missing
         
         } else if ($cur_type == "patent") {
             
