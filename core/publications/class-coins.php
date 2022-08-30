@@ -50,7 +50,7 @@ class TP_Coins {
         
         // TP: some teachPress types are not handled by coins and Zotero. The following
         // are necessarily imperfect mappings.
-        if ($cur_type == "workshop" || $cur_type == "booklet") {
+        if ($cur_type == "workshop" || $cur_type == "booklet" || $cur_type == "conference") {
             $cur_type = "book";
         }
         
