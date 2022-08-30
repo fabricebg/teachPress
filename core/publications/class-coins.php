@@ -52,6 +52,10 @@ class TP_Coins {
         // are necessarily imperfect mappings.
         if ($cur_type == "workshop" || $cur_type == "booklet" || $cur_type == "conference") {
             $cur_type = "book";
+        } else if ($cur_type == "misc" || $cur_type == "workingpaper") {
+            $cur_type = "document";
+        } else if ($cur_type == "online") {
+            $cur_type = "webpage";
         }
         
         // master switch
@@ -141,7 +145,7 @@ class TP_Coins {
             // we map as much as possible to DC for all other types. This will export some info
             // and work very nicely on roundtrip. All of these fields legal for mtx:dc according to
             // http://alcme.oclc.org/openurl/servlet/OAIHandler/extension?verb=GetMetadata&metadataPrefix=mtx&identifier=info:ofi/fmt:kev:mtx:dc
-            $tag_map->add("rft_val_fmt", "info:ofi/fmt:kev:mtx:dc", true, null);
+            $tag_map->add("rft_val_fmt", "info:ofi/fmt:kev:mtx:dc", true, null); // TP: web page when in Zotero
             
             // lacking something better we use Zotero item types here; no clear alternative and this works for roundtrip
             $tag_map->add("rft.type", $cur_type, true, null);
@@ -154,10 +158,12 @@ class TP_Coins {
         }
         
         // TP: better position for doi and url, common to most types above
-        if (array_key_exists("doi", $row) === true && strlen($row["doi"]) > 4) {
+        if (array_key_exists("doi", $row) === true && strlen($row["doi"]) > 4 && $cur_type != "webpage") {
             $tag_map->add("rft.identifier", "doi", false, "urn:doi:%s");
         } else {
-            $tag_map->add("rft.identifier", "url", false, null);
+            // if http* is missing, then the url will not be imported correctly
+            $has_http = array_key_exists("url", $row) && strpos(trim($row["url"]), "http") === 0;
+            $tag_map->add("rft.identifier", "url", false, $has_http ? null : "http://%s");
         }
 
         // TP: better position for abstract even if not supported for some types (e.g., patent)
